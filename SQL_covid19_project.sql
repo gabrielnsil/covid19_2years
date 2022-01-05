@@ -1,3 +1,5 @@
+-- COVID DEATHS
+
 SELECT *
 FROM covid19_project..covidDeaths
 WHERE continent is not NULL
@@ -6,10 +8,6 @@ ORDER BY 3,4
 SELECT *
 FROM covid19_project..covidDeaths
 ORDER BY 3,4
-
---SELECT *
---FROM covid19_project..covidVaccinations
---ORDER BY 3,4
 
 -- Selecionar os dados a serem utilizados
 
@@ -110,10 +108,74 @@ GROUP BY date
 ORDER BY 1,2
 
 -- Quantos % da população mundial infectada sucumbiu ao COVID-19 até o momento?
--- Aproximadamente 1,87% dos infectados faleceu em decorrência do coronavírus.
+-- Aproximadamente 1,89% dos infectados faleceu em decorrência do coronavírus.
 
 SELECT SUM(new_cases) as total_cases, SUM(CAST(new_deaths as int)) as total_deaths, SUM(CAST(new_deaths as int)) / SUM(new_cases) * 100 as death_percentage
 FROM covid19_project..covidDeaths
+WHERE continent is not NULL
 
+-- COVID VACCINATIONS
+
+SELECT *
+FROM covid19_project..covidVaccinations
+ORDER BY 3,4 DESC
+
+
+-- Juntando dados das duas tabelas
+
+SELECT *
+FROM covid19_project..covidDeaths deaths
+JOIN covid19_project..covidVaccinations vacc
+	ON deaths.location = vacc.location 
+	AND deaths.date = vacc.date
+
+
+-- Agora, podemos explorar olhando para os diferentes países, quantas pessoas estão vacinadas por dia
+
+SELECT deaths.continent, deaths.location, deaths.date, deaths.population, vacc.new_vaccinations,
+SUM(CAST(vacc.new_vaccinations as bigint)) OVER (PARTITION BY deaths.location ORDER BY deaths.location, deaths.date) as sum_vaccinationsPerDay
+FROM covid19_project..covidDeaths deaths
+JOIN covid19_project..covidVaccinations vacc
+	ON deaths.location = vacc.location 
+	AND deaths.date = vacc.date
+WHERE deaths.continent is not NULL
+ORDER BY 1,2,3
+
+
+-- Qual a porcentagem de pessoas vacinadas por dia em cada país até o momento?
+-- Para calcular isso podemos usar CTE (Common Table Expression) que cria uma tabela temporária dentro de um contexto que nos permite novos cálculos
+
+
+WITH population_vaccinated(continent, location, date, population, new_vaccinations, sum_vaccinationsPerDay) as 
+
+(
+
+SELECT deaths.continent, deaths.location, deaths.date, deaths.population, vacc.new_vaccinations,
+SUM(CAST(vacc.new_vaccinations as bigint)) OVER (PARTITION BY deaths.location ORDER BY deaths.location, deaths.date) as sum_vaccinationsPerDay
+FROM covid19_project..covidDeaths deaths
+JOIN covid19_project..covidVaccinations vacc
+	ON deaths.location = vacc.location 
+	AND deaths.date = vacc.date
+WHERE deaths.continent is not NULL
+
+)
+
+SELECT *, (sum_vaccinationsPerDay/population) as percent_pop_vaccinated
+FROM population_vaccinated
+-- WHERE location = 'Brazil'
+ORDER BY 1,2,3 
+
+-- DISCLAIMER: Esses dados não mostram quantas primeiras doses foram aplicadas por exemplo, é um somatório de todas as vacinas, logo
+-- Ao olharmos o Brasil vemos que toda a população brasileira em numeros absolutos podemos levianamente afirmar que toda a população já foi vacinada com uma dose e pelo menos metade dela já foi vacinada com 2 doses
+-- O que é falso.
+
+
+-- CRIANDO UMA VIEW PARA VISUALIZAÇÃO NO TABLEAU
+
+CREATE VIEW TotalDeathCount as  
+SELECT location, MAX(CAST(total_deaths as int)) as total_death_count
+FROM covid19_project..covidDeaths
+WHERE continent is not NULL
+GROUP BY location
 
 
