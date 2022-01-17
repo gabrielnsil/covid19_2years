@@ -10,7 +10,7 @@
 Detailed analysis of the dataset Coronavirus (COVID-19) Deaths (from [Our World in Data](https://ourworldindata.org/covid-deaths))
 
 
-Check my most recent data viz. using Tableau:
+Check my most recent data visualization using Tableau:
 
 [COVID-19 (Two Years of Data)](https://public.tableau.com/views/covid19_2years/Painel1?:language=pt-BR&publish=yes&:display_count=n&:origin=viz_share_link)
 
