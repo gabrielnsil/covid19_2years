@@ -1,4 +1,53 @@
--- COVID DEATHS
+-- COVID DEATHS - DATA VISUALIZATION TABLEAU
+USE [covid19_project]
+
+-- 1.
+
+GO
+CREATE VIEW world_deathPercentage as
+SELECT SUM(new_cases) as total_cases, SUM(CAST(new_deaths as int)) as total_deaths, SUM(CAST(new_deaths as int))/SUM(new_cases)*100 as death_percentage
+FROM covid19_project..covidDeaths
+WHERE continent is not NULL
+-- ORDER BY 1, 2
+
+
+-- 2.
+
+GO
+CREATE VIEW deathCountContinent as
+SELECT location, MAX(CAST(total_deaths as int)) as total_death_count
+FROM covid19_project..covidDeaths
+WHERE continent is NULL and location NOT LIKE '%income%' AND location NOT in ('World', 'European Union', 'International')
+GROUP BY location
+-- ORDER BY total_death_count DESC
+
+-- 3.
+
+GO
+CREATE VIEW PercentPopInfected AS
+SELECT location, population, MAX(total_cases) as HighestInfectionCount, MAX((total_cases/population))*100 as PercentPopulationInfected
+FROM covid19_project..covidDeaths
+GROUP BY location, population
+-- ORDER BY PercentPopulationInfected DESC
+
+
+-- 4.
+GO
+CREATE VIEW PopInfectedByDate AS
+SELECT location, population, date, MAX(total_cases) as HighestInfectionCount, MAX((total_cases/population)) * 100 PercentPopulationInfected
+FROM covid19_project..covidDeaths
+GROUP BY location, population, date
+ORDER BY PercentPopulationInfected DESC
+GO
+
+
+
+
+
+
+
+
+-- COVID DEATHS - DATASET EXPLORATION
 
 SELECT *
 FROM covid19_project..covidDeaths
@@ -170,12 +219,5 @@ ORDER BY 1,2,3
 -- O que é falso.
 
 
--- CRIANDO UMA VIEW PARA VISUALIZAÇÃO NO TABLEAU
-
-CREATE VIEW TotalDeathCount as  
-SELECT location, MAX(CAST(total_deaths as int)) as total_death_count
-FROM covid19_project..covidDeaths
-WHERE continent is not NULL
-GROUP BY location
 
 
